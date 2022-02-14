@@ -5,21 +5,17 @@ BUILD=$(shell git rev-parse HEAD)
 BASEDIR=./dist
 DIR=${BASEDIR}/
 
-LDFLAGS=-ldflags "-s -w -X github.com:ArchiMoebius/mythic_c2_websocket/main.Version=${VERSION} -buildid=${BUILD}"
+LDFLAGS=-ldflags "-s -w -X main.build=${BUILD} -X github.com:ArchiMoebius/mythic_c2_websocket/pkg.BuildVersion=${VERSION} -buildid=${BUILD}"
 GCFLAGS=-gcflags=all=-trimpath=$(shell echo ${HOME})
 ASMFLAGS=-asmflags=all=-trimpath=$(shell echo ${HOME})
 
 GOFILES=`go list ./...`
 GOFILESNOTEST=`go list ./... | grep -v test`
 
-# Make Directory to store executables
-$(shell mkdir -p ${DIR})
-
 all: lint linux
 
 linux: lint
-	# go build -tags=websocket main.go
-	env CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -trimpath ${LDFLAGS} ${GCFLAGS} ${ASMFLAGS} -o ${DIR}/server
+	env CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -trimpath ${LDFLAGS} ${GCFLAGS} ${ASMFLAGS} -o ./server ./cmd/server/main.go
 
 tidy:
 	@go mod tidy
@@ -33,6 +29,6 @@ lint: ## Lint the files
 	@go vet ${GOFILESNOTEST}
 
 clean:
-	rm -rf ${BASEDIR}
+	rm -f server
 
 .PHONY: all linux tidy dep lint clean

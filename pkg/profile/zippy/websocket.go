@@ -1,21 +1,6 @@
-// +build websocket
+package zippy
 
-package server
-
-import (
-	"bytes"
-	"crypto/tls"
-	"fmt"
-	"io/ioutil"
-	"log"
-	"net/http"
-	"os"
-	"strings"
-
-	"github.com/gorilla/websocket"
-	"github.com/kabukky/httpscerts"
-)
-
+/*
 type WebsocketC2 struct {
 	BaseURL     string
 	BindAddress string
@@ -299,3 +284,4 @@ func (s WebsocketC2) Websocketlog(msg string) {
 		log.Println(msg)
 	}
 }
+*/

@@ -1,0 +1,13 @@
+{
+    "type": "zippy",
+    "server_certificate": "",
+    "server_key": "",
+    "server_certificate_authority": "",
+    "server_mtls": false,
+    "server_generate_pki": false,
+    "server_host": "0.0.0.0",
+    "server_port": 10101,
+    "websocket_filename": "socket.io",
+    "http_filename": "index.html",
+    "log_path": "/var/log/"
+}
