@@ -1,11 +1,9 @@
 export GO111MODULE=on
 
-VERSION=$(shell date '+%Y%m%d')
 BUILD=$(shell git rev-parse HEAD)
-BASEDIR=./dist
-DIR=${BASEDIR}/
+OUTPUT=websocket-server.elf
 
-LDFLAGS=-ldflags "-s -w -X main.build=${BUILD} -X github.com:ArchiMoebius/mythic_c2_websocket/pkg.BuildVersion=${VERSION} -buildid=${BUILD}"
+LDFLAGS=-ldflags "-s -w -buildid=${BUILD}"
 GCFLAGS=-gcflags=all=-trimpath=$(shell echo ${HOME})
 ASMFLAGS=-asmflags=all=-trimpath=$(shell echo ${HOME})
 
@@ -15,7 +13,7 @@ GOFILESNOTEST=`go list ./... | grep -v test`
 all: lint linux
 
 linux: lint
-	env CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -trimpath ${LDFLAGS} ${GCFLAGS} ${ASMFLAGS} -o ./server ./cmd/server/main.go
+	env CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -trimpath ${LDFLAGS} ${GCFLAGS} ${ASMFLAGS} -o ${OUTPUT} ./cmd/server/main.go
 
 tidy:
 	@go mod tidy

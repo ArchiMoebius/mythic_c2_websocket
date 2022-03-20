@@ -12,8 +12,6 @@ import (
 
 	pkg "ArchiMoebius/mythic_c2_websocket/pkg"
 	"ArchiMoebius/mythic_c2_websocket/pkg/logger"
-
-	"github.com/fatih/color"
 )
 
 var config = "./config.json"
@@ -25,7 +23,6 @@ var config = "./config.json"
 
 func main() {
 	verbose := flag.Bool("v", false, "Enable verbose output")
-	version := flag.Bool("version", false, "Display the mailpipe version and exit")
 	debug := flag.Bool("d", false, "Show debug messages")
 
 	flag.StringVar(&config, "config", config, "The config - by default looks in the current directory for config.json")
@@ -33,18 +30,11 @@ func main() {
 	flag.Usage = usage
 	flag.Parse()
 
-	if *version {
-		logger.Log(fmt.Sprintf("[+] Version %s", pkg.BuildDate))
-		os.Exit(0)
-	}
-
 	commonConfig, err := pkg.LoadAndParseConfig(config, *verbose, *debug)
 
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-
-	color.Green(fmt.Sprintf("\t %s\n", commonConfig.Transport))
 
 	err = commonConfig.Run()
 

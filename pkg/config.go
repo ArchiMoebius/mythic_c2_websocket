@@ -36,10 +36,6 @@ func LoadAndParseConfig(configFile string, verbose bool, debug bool) (*iface.Tra
 	apiConfig.Verbose = verbose
 	apiConfig.Debug = debug
 
-	if apiConfig.Verbose {
-		logger.Log(fmt.Sprintf("[I] Using transport: %s\n", apiConfig.Transport))
-	}
-
 	logger.Log("[+] Websocket configuration loaded")
 
 	return &apiConfig, nil

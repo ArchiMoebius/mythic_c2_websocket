@@ -1,27 +1,20 @@
-# `pkg/`
+# Mythic Websocket C2 Profile - server source
 
-This directory contains the core code which is invoked by the `/cmd/*/main.go` code.
+This project supports the Mythic websocket C2Profile.
 
-## `pkg/api/`
+Currently, there are two 'profiles' which can be found at ./pkt/profile/:
 
-This directory holds all of the gin / web api code
+1) prosaic (default)
+    - Assumes message follow the C2 Profile structure
 
-## `pkg/constants/`
+2) poseidon
+    - Wraps messages in a custom structure as seen in ./pkg/profile/poseidon/model/blob.go
 
-There shouldn't be anything here but global constants...
+There is a config.json under each of the profiles which contains the JSON required to create a transport of the type desired.
 
-## `pkg/config/`
+To add a profile, look at ./pkg/iface/iface.go interface TransportConfigData and the default profile (prosaic).
 
-Mailpipe and Mailpipe API config parsing code (most important is currently the transports code)
+# F.A.Q.
 
-## `pkg/logger/`
-
-Contains code to do console logging - but a file logger could be added...
-
-## `pkg/mailpipe/`
-
-This directory holds all of the mailpipe code (the part which accepts, parses, and then stores incoming emails)
-
-## `pkg/storage/`
-
-Currently, there is only redis storage of parsed emails - this could change...
+Q: Why is the default profile named prosaic?
+A: Because...'default' is a reserved keyword in Golang xD

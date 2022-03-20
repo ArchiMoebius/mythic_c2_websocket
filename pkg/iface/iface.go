@@ -4,7 +4,7 @@ import (
 	"ArchiMoebius/mythic_c2_websocket/pkg/logger"
 	"ArchiMoebius/mythic_c2_websocket/pkg/profile/common"
 	"ArchiMoebius/mythic_c2_websocket/pkg/profile/poseidon"
-	"ArchiMoebius/mythic_c2_websocket/pkg/profile/zippy"
+	"ArchiMoebius/mythic_c2_websocket/pkg/profile/prosaic"
 	"bytes"
 	"context"
 	"crypto/tls"
@@ -44,8 +44,8 @@ func (b *TransportConfig) UnmarshalJSON(data []byte) error {
 	}
 
 	switch tmpHeader.Type {
-	case "zippy":
-		b.Transport = new(zippy.Transport)
+	case "default":
+		b.Transport = new(prosaic.Transport)
 	case "poseidon":
 		b.Transport = new(poseidon.Transport)
 	}
@@ -55,7 +55,7 @@ func (b *TransportConfig) UnmarshalJSON(data []byte) error {
 	}
 
 	b.RelayServer = os.Getenv("MYTHIC_ADDRESS")
-	b.BaseURL = fmt.Sprintf("http://%s", b.RelayServer)
+	b.BaseURL = fmt.Sprintf("%s", b.RelayServer)
 
 	return b.Transport.Load()
 }
@@ -72,7 +72,8 @@ type TransportConfigData interface {
 	GetHTTPFilename() string
 	GetWebSocketFilename() string
 	GetServerAddress() string
-	ParseClientMessage(blob []byte) ([]byte, error)
+	ParseClientMessage(blob []byte) ([]byte, []byte, error)
+	ParseMythicResponse([]byte, []byte) ([]byte, error)
 	Load() error
 }
 
@@ -111,7 +112,7 @@ func (s *TransportConfig) decodeNextMythicMessage(c *websocket.Conn) (string, []
 
 	if err != nil {
 		logger.Log(fmt.Sprintf("[!] Failed to io.ReadAll: %s", err.Error()))
-		return "", []byte{}, err
+		return "", blob, err
 	}
 
 	msg := make([]byte, len(blob)*len(blob)/base64.StdEncoding.DecodedLen(len(blob)))
@@ -120,10 +121,10 @@ func (s *TransportConfig) decodeNextMythicMessage(c *websocket.Conn) (string, []
 
 	if err != nil {
 		logger.Log(fmt.Sprintf("[!] Failed to base64 decode: %s", err.Error()))
-		return "", []byte{}, err
+		return "", blob, err
 	}
 
-	return string(msg[0:36]), msg[36:], err
+	return string(msg[0:36]), blob, err
 }
 
 // PostMythicMessage HTTP POST function
@@ -138,6 +139,10 @@ func (s *TransportConfig) PostMythicMessage(apiEndpoint string, sendData []byte)
 		logger.Log(fmt.Sprintf("[I] POST request to URL: %s", url))
 	}
 
+	if s.Verbose {
+		logger.Log(fmt.Sprintf("[I] POST Body:\n%s\n", string(sendData)))
+	}
+
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(sendData))
 
 	if err != nil {
@@ -145,8 +150,13 @@ func (s *TransportConfig) PostMythicMessage(apiEndpoint string, sendData []byte)
 		return make([]byte, 0)
 	}
 
-	req.Header.Add("Mythic", "websocket")
 	contentLength := len(sendData)
+
+	req.Header.Add("Mythic", "websocket")
+
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")  // required?
+	req.Header.Set("Content-Length", fmt.Sprintf("%d", contentLength)) // required?
+
 	req.ContentLength = int64(contentLength)
 
 	tr := &http.Transport{
@@ -220,6 +230,7 @@ func (s *TransportConfig) GetMythicMessage(url string) []byte {
 }
 
 func (s *TransportConfig) manageClient(c *websocket.Conn) {
+	c.SetCloseHandler(nil) // nil defaults to library close handler
 
 	defer c.Close()
 
@@ -232,10 +243,13 @@ LOOP:
 
 		if err != nil {
 			logger.Log(fmt.Sprintf("[!] Read error %s. Exiting session", err.Error()))
-			break LOOP
+
+			if len(blob) <= 0 {
+				break LOOP
+			}
 		}
 
-		data, err := s.Transport.ParseClientMessage(blob)
+		data, meta, err := s.Transport.ParseClientMessage(blob)
 
 		if err != nil {
 			logger.Log(fmt.Sprintf("[!] Read ParseClientMessage failed %s. Exiting session", err.Error()))
@@ -246,13 +260,19 @@ LOOP:
 			logger.Log(fmt.Sprintf("[D] Received agent message %s\n", string(data)))
 		}
 
-		resp := s.PostMythicMessage("/api/v1.4/agent_message", data)
+		resp := s.PostMythicMessage("", data) // Mythic appends /api/v1.4/agent_message to the URL in the ENV...
 
 		w, err := c.NextWriter(websocket.TextMessage)
 
 		if err != nil {
 			logger.Log(fmt.Sprintf("[!] Failed to obtain writer %s", err.Error()))
 			break LOOP
+		}
+
+		resp, err = s.Transport.ParseMythicResponse(resp, meta)
+
+		if err != nil {
+			logger.Log(fmt.Sprintf("[!] Failed to ParseMythicResponse %s", err.Error()))
 		}
 
 		w.Write(resp)

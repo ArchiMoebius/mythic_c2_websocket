@@ -1,7 +1,10 @@
 package poseidon
 
 import (
+	"ArchiMoebius/mythic_c2_websocket/pkg/logger"
 	common "ArchiMoebius/mythic_c2_websocket/pkg/profile/common"
+	model "ArchiMoebius/mythic_c2_websocket/pkg/profile/poseidon/model"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 )
@@ -38,9 +41,47 @@ func (d *Transport) GetServerAddress() string {
 	return d.BindAddress
 }
 
-func (d *Transport) ParseClientMessage(blob []byte) ([]byte, error) {
-	// TODO: Unsure if custom parsing is required...
-	return blob, nil
+func (d *Transport) ParseMythicResponse(blob []byte, meta []byte) ([]byte, error) {
+
+	reply := model.BlobStructure{Client: false}
+
+	if len(blob) == 0 {
+		reply.Data = string(make([]byte, 1))
+	} else {
+		reply.Data = string(blob)
+	}
+
+	reply.Tag = string(meta)
+
+	resp, err := json.Marshal(reply)
+
+	if err != nil {
+		return blob, err
+	}
+
+	return resp, nil
+}
+
+func (d *Transport) ParseClientMessage(blob []byte) ([]byte, []byte, error) {
+	var messageAPI model.BlobStructure
+
+	err := json.Unmarshal(blob, &messageAPI)
+
+	if err != nil {
+		logger.Log(fmt.Sprintf("Unable to unmarshal blob: %v", blob))
+		return nil, nil, err
+	}
+
+	msg := make([]byte, len(messageAPI.Data)*len(messageAPI.Data)/base64.StdEncoding.DecodedLen(len(messageAPI.Data)))
+
+	_, err = base64.StdEncoding.Decode(msg, []byte(messageAPI.Data))
+
+	if err != nil {
+		logger.Log(fmt.Sprintf("[!] Failed to base64 decode: %s", err.Error()))
+		return blob, []byte(messageAPI.Tag), err
+	}
+
+	return msg, []byte(messageAPI.Tag), nil
 }
 
 func (d *Transport) Load() error {
