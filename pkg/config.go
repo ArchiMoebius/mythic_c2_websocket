@@ -9,7 +9,7 @@ import (
 	"log"
 )
 
-//LoadAndParseConfig loads and parses the config for an emailfilter
+//LoadAndParseConfig loads and parses the config for a transport
 func LoadAndParseConfig(configFile string, verbose bool, debug bool) (*iface.TransportConfig, error) {
 	logger.Log("[+] Websocket configuration loading")
 

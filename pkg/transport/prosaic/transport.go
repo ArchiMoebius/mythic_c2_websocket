@@ -1,7 +1,7 @@
 package prosaic
 
 import (
-	common "ArchiMoebius/mythic_c2_websocket/pkg/profile/common"
+	common "ArchiMoebius/mythic_c2_websocket/pkg/transport/common"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
@@ -10,7 +10,7 @@ import (
 	"io/ioutil"
 )
 
-// Transport for sendgrid configuration params
+// Transport for default configuration params
 type Transport struct {
 	common.BaseTransportConfig
 	CertificateFile          string `json:"server_certificate"`

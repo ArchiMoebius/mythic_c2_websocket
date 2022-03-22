@@ -27,6 +27,6 @@ lint: ## Lint the files
 	@go vet ${GOFILESNOTEST}
 
 clean:
-	rm -f server
+	rm -f ${OUTPUT}
 
 .PHONY: all linux tidy dep lint clean

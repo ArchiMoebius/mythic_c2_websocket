@@ -2,8 +2,8 @@ package poseidon
 
 import (
 	"ArchiMoebius/mythic_c2_websocket/pkg/logger"
-	common "ArchiMoebius/mythic_c2_websocket/pkg/profile/common"
-	model "ArchiMoebius/mythic_c2_websocket/pkg/profile/poseidon/model"
+	common "ArchiMoebius/mythic_c2_websocket/pkg/transport/common"
+	model "ArchiMoebius/mythic_c2_websocket/pkg/transport/poseidon/model"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -26,7 +26,7 @@ func (d *Transport) UseMTLS() bool {
 }
 
 func (d *Transport) GetLogPath(string) string {
-	return fmt.Sprintf("/Mythic/cs_code/%s", d.LogFile)
+	return fmt.Sprintf("/Mythic/c2_code/%s", d.LogFile)
 }
 
 func (d *Transport) GetHTTPFilename() string {

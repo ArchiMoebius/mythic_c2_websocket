@@ -2,9 +2,9 @@ package iface
 
 import (
 	"ArchiMoebius/mythic_c2_websocket/pkg/logger"
-	"ArchiMoebius/mythic_c2_websocket/pkg/profile/common"
-	"ArchiMoebius/mythic_c2_websocket/pkg/profile/poseidon"
-	"ArchiMoebius/mythic_c2_websocket/pkg/profile/prosaic"
+	"ArchiMoebius/mythic_c2_websocket/pkg/transport/common"
+	"ArchiMoebius/mythic_c2_websocket/pkg/transport/poseidon"
+	"ArchiMoebius/mythic_c2_websocket/pkg/transport/prosaic"
 	"bytes"
 	"context"
 	"crypto/tls"
@@ -68,6 +68,7 @@ type TransportConfigData interface {
 	GetCertificates() []tls.Certificate
 	GetCertificateAuthority() *x509.CertPool
 	UseMTLS() bool
+	GetVerify() bool
 	GetLogPath(string) string
 	GetHTTPFilename() string
 	GetWebSocketFilename() string
@@ -91,7 +92,7 @@ func (s *TransportConfig) WebSocketHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	if s.Debug {
+	if s.Verbose {
 		logger.Log("[I] Received new websocket client")
 	}
 
@@ -313,6 +314,7 @@ func (s *TransportConfig) Run() error {
 		s.Server.ReadTimeout = time.Minute
 		s.Server.WriteTimeout = time.Minute
 		s.Server.TLSConfig = &tls.Config{
+			InsecureSkipVerify:       s.Transport.GetVerify(),
 			CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
 			PreferServerCipherSuites: true,
 			Renegotiation:            tls.RenegotiateNever,
