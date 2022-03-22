@@ -63,7 +63,7 @@ func (d *Transport) Load() error {
 		return nil // Plain'ol HTTP requested
 	}
 
-	if d.GeneratePKI && (d.CertificateFile == "" || d.KeyFile == "") {
+	if d.GeneratePKI && (d.CertificateFile != "" || d.KeyFile != "") {
 		return errors.New("server_generate_pki and (server_key, server_certificate) are mutually exclusive options")
 	}
 
@@ -118,7 +118,6 @@ func (d *Transport) Load() error {
 		}
 
 		d.TransportCertificatePool = x509.NewCertPool()
-
 		d.TransportCertificatePool.AppendCertsFromPEM(caCert)
 	}
 
